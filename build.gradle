@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'org.beryx.jlink' version '2.25.0'
+}
+
+group 'net.cassite'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+jlink {
+    options = ['--compress', '2', '--no-header-files', '--no-man-pages']
+    launcher {
+        name = 'tdpcli'
+    }
+    mainClass = "net.cassite.tdpcli.Main"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.github.oshi:oshi-core-java11:6.2.1'
+    implementation 'org.slf4j:slf4j-nop:1.7.36'
+}
