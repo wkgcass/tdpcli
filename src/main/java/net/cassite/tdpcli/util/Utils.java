@@ -1,4 +1,4 @@
-package net.cassite.tdpcli;
+package net.cassite.tdpcli.util;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -7,24 +7,34 @@ public class Utils {
     private Utils() {
     }
 
+    public static LogLevel logLevel = LogLevel.info;
+
     public static void log(String s) {
         System.out.println(s);
     }
 
     public static void debug(String s) {
-        log(s);
+        if (LogLevel.debug.greaterOrEqualTo(logLevel)) {
+            log("[debug] " + s);
+        }
     }
 
     public static void info(String s) {
-        log(s);
+        if (LogLevel.info.greaterOrEqualTo(logLevel)) {
+            log("[info] " + s);
+        }
     }
 
     public static void warn(String s) {
-        log(s);
+        if (LogLevel.warn.greaterOrEqualTo(logLevel)) {
+            log("[warn] " + s);
+        }
     }
 
     public static void error(String s) {
-        log(s);
+        if (LogLevel.error.greaterOrEqualTo(logLevel)) {
+            log("[error] " + s);
+        }
     }
 
     public static boolean isInteger(String s) {

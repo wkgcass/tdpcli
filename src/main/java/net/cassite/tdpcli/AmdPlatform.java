@@ -13,7 +13,7 @@ public class AmdPlatform implements Platform {
     }
 
     @Override
-    public void updatePowerLimit(PowerLimit pl) {
+    public void updatePowerLimit(Args args) {
         throw new UnsupportedOperationException();
     }
 }

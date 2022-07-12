@@ -1,5 +1,7 @@
 package net.cassite.tdpcli;
 
+import net.cassite.tdpcli.util.PrintFormat;
+import net.cassite.tdpcli.util.Utils;
 import oshi.SystemInfo;
 
 import static net.cassite.tdpcli.Consts.amdArch;
@@ -22,6 +24,12 @@ public class Main {
             return;
         }
 
+        if (a.logLevel != null) {
+            Utils.logLevel = a.logLevel;
+        }
+
+        Utils.debug("args = " + a);
+
         if (a.forceIntel && a.forceAmd) {
             Utils.error("cannot force to use intel and amd at the same time");
             System.exit(1);
@@ -34,7 +42,7 @@ public class Main {
         if (!intelArch.contains(microArch) && !amdArch.contains(microArch)) {
             if (!a.forceIntel && !a.forceAmd) {
                 Utils.error("Unregistered micro architecture `" + microArch + "`, this program might not work on this platform");
-                Utils.info("If you are sure this program can work on your platform, add `--force-intel` or `--force-amd` flag, and please create an issues to report your platform: https://github.com/wkgcass");
+                Utils.info("If you are sure this program can work on your platform, add `--force-intel` or `--force-amd` flag, and please create an issues to report your platform: https://github.com/wkgcass/tdpcli");
                 System.exit(1);
                 return;
             }
@@ -88,7 +96,17 @@ public class Main {
         }
 
         if (a.isModify()) {
-            throw new UnsupportedOperationException();
+            if (a.msr) {
+                //noinspection ConstantConditions
+                ((IntelPlatform) platform).updateMSRPowerLimit(a);
+            }
+            if (a.mmio) {
+                //noinspection ConstantConditions
+                ((IntelPlatform) platform).updateMMIOPowerLimit(a);
+            }
+            if (!a.msr && !a.mmio) {
+                platform.updatePowerLimit(a);
+            }
         } else {
             if (a.msr && a.mmio) {
                 Utils.error("cannot specify --msr and --mmio at the same time when retrieving info");
@@ -107,7 +125,13 @@ public class Main {
                 pl = platform.getPowerLimit();
             }
 
-            System.out.println(pl);
+            if (a.printFormat == PrintFormat.table) {
+                System.out.println(pl.formatToTable());
+            } else if (a.printFormat == PrintFormat.json) {
+                System.out.println(pl.formatToJson().pretty());
+            } else {
+                System.out.println(pl.formatToTable());
+            }
         }
     }
 }
