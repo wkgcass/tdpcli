@@ -142,20 +142,21 @@ public class IntelPlatform implements Platform {
         return getMSRPowerLimit();
     }
 
-    public void updateMSRPowerLimit(Args args) {
+    public boolean updateMSRPowerLimit(Args args) {
         var units = getUnits();
         long value = readMSR(0x610);
         long oldValue = value;
         value = setPLValues(value, args, units);
         if (oldValue == value) {
             Utils.debug("msr not changed");
-            return;
+            return false;
         }
         wrmsr(0x610, value);
+        return true;
     }
 
     @SuppressWarnings("DuplicatedCode")
-    public void updateMMIOPowerLimit(Args args) {
+    public boolean updateMMIOPowerLimit(Args args) {
         var units = getUnits();
         var mchbar = readPCI32(0, 0, 0, 0x48);
         mchbar = mchbar - mchbar % 4; // align to 4
@@ -171,7 +172,7 @@ public class IntelPlatform implements Platform {
 
         if (value == oldValue) {
             Utils.debug("mmio not changed");
-            return;
+            return false;
         }
 
         if (newPL.pl1.power > oldPL.pl2.power) {
@@ -183,12 +184,14 @@ public class IntelPlatform implements Platform {
             write32(mchbar + 0x59A0, (int) (value & 0xffffffffL));
             write32(mchbar + 0x59A0 + 4, (int) ((value >> 32) & 0xffffffffL));
         }
+        return true;
     }
 
     @Override
-    public void updatePowerLimit(Args args) {
-        updateMSRPowerLimit(args);
-        updateMMIOPowerLimit(args);
+    public boolean updatePowerLimit(Args args) {
+        boolean msr = updateMSRPowerLimit(args);
+        boolean mmio = updateMMIOPowerLimit(args);
+        return msr || mmio;
     }
 
     @SuppressWarnings("PointlessBitwiseExpression")

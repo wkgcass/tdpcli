@@ -57,7 +57,10 @@ class Daemon(private val ipport: IPPort, private val platform: Platform, private
     Utils.debug("interval update enters")
     val args = this.args ?: return
     Utils.debug("interval update executes")
-    platform.updatePowerLimit(args)
+    val modified = platform.updatePowerLimit(args)
+    if (modified) {
+      Utils.info("power limit is reset by interval updating: ${args.plFieldsToString()}")
+    }
   }
 
   fun setArgs(args: Args) {
