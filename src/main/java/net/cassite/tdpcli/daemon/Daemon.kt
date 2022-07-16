@@ -18,6 +18,7 @@ import net.cassite.tdpcli.util.Utils
 import net.cassite.tdpcli.util.Version
 
 class Daemon(private val ipport: IPPort, private val platform: Platform, private val config: Config) {
+  private var defaultArgs: Args? = null
   private var args: Args? = null
   private val loop = NetEventLoop(SelectorEventLoop.open())
   private lateinit var periodicEvent: PeriodicEvent
@@ -35,6 +36,7 @@ class Daemon(private val ipport: IPPort, private val platform: Platform, private
     server.get("/tdpcli/api/v1.0/power_limit", ::getPowerLimit)
     server.get("/tdpcli/api/v1.0/config", ::getConfig)
     server.put("/tdpcli/api/v1.0/power_limit", ::setPowerLimit)
+    server.put("/tdpcli/api/v1.0/power_limit/restore", ::restorePowerLimit)
     server.put("/tdpcli/api/v1.0/config", ::setConfig)
   }
 
@@ -63,8 +65,9 @@ class Daemon(private val ipport: IPPort, private val platform: Platform, private
     }
   }
 
-  fun setArgs(args: Args) {
-    Utils.info("power limit update: ${args.plFieldsToString()}")
+  fun setDefaultArgs(args: Args) {
+    Utils.info("default power limit update: ${args.plFieldsToString()}")
+    this.defaultArgs = args
     if (this.args == null) {
       this.args = args
     } else {
@@ -119,6 +122,16 @@ class Daemon(private val ipport: IPPort, private val platform: Platform, private
     if (needToAssign) {
       this.args = args
     }
+    restartTimer()
+    ctx.conn.response(204).send()
+  }
+
+  private suspend fun restorePowerLimit(ctx: RoutingContext) {
+    if (defaultArgs == null) {
+      ctx.conn.response(400).send(ObjectBuilder().put("code", 400).put("message", "default power limit is not set").build())
+      return
+    }
+    this.args = defaultArgs
     restartTimer()
     ctx.conn.response(204).send()
   }

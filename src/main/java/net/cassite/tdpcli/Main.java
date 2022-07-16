@@ -130,7 +130,7 @@ public class Main {
             var daemon = new Daemon(ipport, platform, config);
             daemon.start();
             if (a.isModify()) {
-                daemon.setArgs(a);
+                daemon.setDefaultArgs(a);
             }
             return;
         }
