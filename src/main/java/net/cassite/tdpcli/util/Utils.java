@@ -1,5 +1,8 @@
 package net.cassite.tdpcli.util;
 
+import io.vproxy.base.util.LogType;
+import io.vproxy.base.util.Logger;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,31 +12,27 @@ public class Utils {
 
     public static LogLevel logLevel = LogLevel.info;
 
-    public static void log(String s) {
-        System.out.println(s);
-    }
-
     public static void debug(String s) {
         if (LogLevel.debug.greaterOrEqualTo(logLevel)) {
-            log("[debug] " + s);
+            Logger.trace(LogType.ALERT, s);
         }
     }
 
     public static void info(String s) {
         if (LogLevel.info.greaterOrEqualTo(logLevel)) {
-            log("[info] " + s);
+            Logger.info(LogType.ALERT, s);
         }
     }
 
     public static void warn(String s) {
         if (LogLevel.warn.greaterOrEqualTo(logLevel)) {
-            log("[warn] " + s);
+            Logger.warn(LogType.ALERT, s);
         }
     }
 
     public static void error(String s) {
         if (LogLevel.error.greaterOrEqualTo(logLevel)) {
-            log("[error] " + s);
+            Logger.error(LogType.ALERT, s);
         }
     }
 
