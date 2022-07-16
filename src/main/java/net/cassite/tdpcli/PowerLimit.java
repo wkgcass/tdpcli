@@ -1,19 +1,29 @@
 package net.cassite.tdpcli;
 
+import io.vproxy.dep.vjson.JSON;
+import io.vproxy.dep.vjson.deserializer.rule.BoolRule;
+import io.vproxy.dep.vjson.deserializer.rule.DoubleRule;
+import io.vproxy.dep.vjson.deserializer.rule.ObjectRule;
+import io.vproxy.dep.vjson.deserializer.rule.Rule;
+import io.vproxy.dep.vjson.util.ObjectBuilder;
 import net.cassite.tdpcli.util.TableBuilder;
-import vjson.JSON;
-import vjson.util.ObjectBuilder;
 
 public class PowerLimit {
     public boolean locked = false;
-    public final Limit pl1 = new Limit();
-    public final Limit pl2 = new Limit();
+    public Limit pl1 = new Limit();
+    public Limit pl2 = new Limit();
 
     public static final class Limit {
         public boolean enabled;
         public double power; // watts
         public boolean clamping;
-        double time; // seconds
+        public double time; // seconds
+
+        public static final Rule<Limit> rule = new ObjectRule<>(Limit::new)
+            .put("enabled", (o, b) -> o.enabled = b, BoolRule.get())
+            .put("power", (o, d) -> o.power = d, DoubleRule.get())
+            .put("clamping", (o, b) -> o.clamping = b, BoolRule.get())
+            .put("time", (o, d) -> o.time = d, DoubleRule.get());
 
         public JSON.Object formatToJson() {
             return new ObjectBuilder()
@@ -39,6 +49,11 @@ public class PowerLimit {
         table.tr().td("pl2.time").td(Double.toString(pl2.time)).td("");
         return table.toString();
     }
+
+    public static final Rule<PowerLimit> rule = new ObjectRule<>(PowerLimit::new)
+        .put("locked", (o, b) -> o.locked = b, BoolRule.get())
+        .put("pl1", (o, oo) -> o.pl1 = oo, Limit.rule)
+        .put("pl2", (o, oo) -> o.pl2 = oo, Limit.rule);
 
     public JSON.Instance<?> formatToJson() {
         return new ObjectBuilder()

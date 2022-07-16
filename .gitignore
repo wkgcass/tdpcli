@@ -46,3 +46,6 @@ build/
 
 # vim
 *.swp
+
+# vproxy
+!vproxy-no-kt-runtime.jar

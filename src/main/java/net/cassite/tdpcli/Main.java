@@ -1,8 +1,16 @@
 package net.cassite.tdpcli;
 
+import io.vproxy.dep.vjson.JSON;
+import io.vproxy.vfd.IPPort;
+import net.cassite.tdpcli.daemon.Config;
+import net.cassite.tdpcli.daemon.Daemon;
 import net.cassite.tdpcli.util.PrintFormat;
 import net.cassite.tdpcli.util.Utils;
 import oshi.SystemInfo;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static net.cassite.tdpcli.Consts.amdArch;
 import static net.cassite.tdpcli.Consts.intelArch;
@@ -64,12 +72,12 @@ public class Main {
         }
 
         if (!a.forceIntel) {
-            if (a.msr) {
+            if (a.intelMsr) {
                 Utils.error("cannot specify --msr");
                 System.exit(1);
                 return;
             }
-            if (a.mmio) {
+            if (a.intelMmio) {
                 Utils.error("cannot specify --mmio");
                 System.exit(1);
                 return;
@@ -95,30 +103,62 @@ public class Main {
             return;
         }
 
+        if (a.daemon) {
+            String err = a.validateForDaemon();
+            if (err != null) {
+                Utils.error(err);
+                System.exit(1);
+                return;
+            }
+            var ipport = a.daemonListen;
+            if (ipport == null) {
+                ipport = new IPPort("127.0.0.1", 14514);
+            }
+            var configPath = a.daemonConfig;
+            Config config;
+            if (configPath != null) {
+                String configStr;
+                try {
+                    configStr = Files.readString(Path.of(configPath));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                config = JSON.deserialize(configStr, Config.rule);
+            } else {
+                config = new Config();
+            }
+            var daemon = new Daemon(ipport, platform, config);
+            daemon.start();
+            if (a.isModify()) {
+                daemon.setArgs(a);
+            }
+            return;
+        }
+
         if (a.isModify()) {
-            if (a.msr) {
+            if (a.intelMsr) {
                 //noinspection ConstantConditions
                 ((IntelPlatform) platform).updateMSRPowerLimit(a);
             }
-            if (a.mmio) {
+            if (a.intelMmio) {
                 //noinspection ConstantConditions
                 ((IntelPlatform) platform).updateMMIOPowerLimit(a);
             }
-            if (!a.msr && !a.mmio) {
+            if (!a.intelMsr && !a.intelMmio) {
                 platform.updatePowerLimit(a);
             }
         } else {
-            if (a.msr && a.mmio) {
+            if (a.intelMsr && a.intelMmio) {
                 Utils.error("cannot specify --msr and --mmio at the same time when retrieving info");
                 System.exit(1);
                 return;
             }
 
             PowerLimit pl;
-            if (a.msr) {
+            if (a.intelMsr) {
                 //noinspection ConstantConditions
                 pl = ((IntelPlatform) platform).getMSRPowerLimit();
-            } else if (a.mmio) {
+            } else if (a.intelMmio) {
                 //noinspection ConstantConditions
                 pl = ((IntelPlatform) platform).getMMIOPowerLimit();
             } else {

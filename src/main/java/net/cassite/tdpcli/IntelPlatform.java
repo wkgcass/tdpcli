@@ -145,7 +145,12 @@ public class IntelPlatform implements Platform {
     public void updateMSRPowerLimit(Args args) {
         var units = getUnits();
         long value = readMSR(0x610);
+        long oldValue = value;
         value = setPLValues(value, args, units);
+        if (oldValue == value) {
+            Utils.debug("msr not changed");
+            return;
+        }
         wrmsr(0x610, value);
     }
 
@@ -159,9 +164,15 @@ public class IntelPlatform implements Platform {
         long h = read32(mchbar + 0x59A0 + 4);
 
         long value = (h << 32) | l;
+        long oldValue = value;
         var oldPL = formatPowerLimit(value, units);
         value = setPLValues(value, args, units);
         var newPL = formatPowerLimit(value, units);
+
+        if (value == oldValue) {
+            Utils.debug("mmio not changed");
+            return;
+        }
 
         if (newPL.pl1.power > oldPL.pl2.power) {
             // need to apply pl2 first because pl1 exceeds old pl2
@@ -254,13 +265,6 @@ public class IntelPlatform implements Platform {
             long v = (long) (args.pl2 / units.power);
             v = v << 32;
             long mask = 0b111111111111111L << 32;
-            v = v & mask;
-            value = (value & ~mask) | v;
-        }
-        if (args.enable1 != null) {
-            long v = args.enable1 ? 1 : 0;
-            v = v << 15;
-            long mask = 1L << 15;
             v = v & mask;
             value = (value & ~mask) | v;
         }
