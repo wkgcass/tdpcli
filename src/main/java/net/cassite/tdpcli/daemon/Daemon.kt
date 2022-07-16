@@ -134,7 +134,11 @@ class Daemon(private val ipport: IPPort, private val platform: Platform, private
       ctx.conn.response(400).send(ObjectBuilder().put("code", 400).put("message", "default power limit is not set").build())
       return
     }
-    this.args = defaultArgs
+    if (this.args == null) {
+      this.args = defaultArgs
+    } else {
+      this.args!!.from(defaultArgs)
+    }
     restartTimer()
     ctx.conn.response(204).send()
   }
